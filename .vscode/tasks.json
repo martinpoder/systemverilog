@@ -1,0 +1,65 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "SV: List sources",
+      "type": "shell",
+      "command": "make",
+      "args": ["list", "PROJECT=${input:project}", "MODULE=${input:module}"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "SV: Compile",
+      "type": "shell",
+      "command": "make",
+      "args": ["compile", "PROJECT=${input:project}", "MODULE=${input:module}"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "SV: Simulate",
+      "type": "shell",
+      "command": "make",
+      "args": ["sim", "PROJECT=${input:project}", "MODULE=${input:module}"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "SV: Open GTKWave",
+      "type": "shell",
+      "command": "make",
+      "args": ["wave", "PROJECT=${input:project}", "MODULE=${input:module}"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "SV: Open VaporView",
+      "type": "shell",
+      "command": "code",
+      "args": [
+        "--reuse-window",
+        "${workspaceFolder}/${input:project}/${input:module}.vcd"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+}
+  ],
+  "inputs": [
+    {
+      "id": "project",
+      "type": "promptString",
+      "description": "Project folder name",
+      "default": "adder"
+    },
+    {
+      "id": "module",
+      "type": "promptString",
+      "description": "Top module name (without _tb)",
+      "default": "adder"
+    }
+  ]
+}
