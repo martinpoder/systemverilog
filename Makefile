@@ -37,6 +37,7 @@ TB := $(PROJECT)/$(MODULE)_tb.sv
 # Outputs named after the selected module
 SIM := $(PROJECT)/$(MODULE).vvp
 VCD := $(PROJECT)/$(MODULE).vcd
+LOG := $(PROJECT)/$(MODULE).log
 
 .PHONY: all check list compile sim wave clean
 
@@ -58,6 +59,7 @@ list: check
 	@printf '  %s\n' $(DESIGN_FILES) "$(TB)"
 	@echo "Binary:  $(SIM)"
 	@echo "Waveform: $(VCD)"
+	@echo "Log:      $(LOG)"
 
 compile: check
 	iverilog -g2012 -Wall \
@@ -66,8 +68,11 @@ compile: check
 		$(DESIGN_FILES) "$(TB)"
 
 sim: compile
-	cd "$(PROJECT)" && \
-		vvp "$(MODULE).vvp" +VCD="$(MODULE).vcd"
+	@bash -o pipefail -c '{ \
+		$(MAKE) compile PROJECT="$(PROJECT)" MODULE="$(MODULE)" && \
+		cd "$(PROJECT)" && \
+		vvp "$(MODULE).vvp" +VCD="$(MODULE).vcd"; \
+	} 2>&1 | tee "$(LOG)"'
 
 wave: check
 	@test -f "$(VCD)" || \

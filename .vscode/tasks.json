@@ -5,16 +5,28 @@
       "label": "SV: List sources",
       "type": "shell",
       "command": "make",
-      "args": ["list", "PROJECT=${input:project}", "MODULE=${input:module}"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "list",
+        "PROJECT=${input:project}",
+        "MODULE=${input:module}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     },
     {
       "label": "SV: Compile",
       "type": "shell",
       "command": "make",
-      "args": ["compile", "PROJECT=${input:project}", "MODULE=${input:module}"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "compile",
+        "PROJECT=${input:project}",
+        "MODULE=${input:module}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "group": "build",
       "problemMatcher": []
     },
@@ -22,16 +34,33 @@
       "label": "SV: Simulate",
       "type": "shell",
       "command": "make",
-      "args": ["sim", "PROJECT=${input:project}", "MODULE=${input:module}"],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": []
+      "args": [
+        "sim",
+        "PROJECT=${input:project}",
+        "MODULE=${input:module}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
     },
     {
       "label": "SV: Open GTKWave",
       "type": "shell",
       "command": "make",
-      "args": ["wave", "PROJECT=${input:project}", "MODULE=${input:module}"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "wave",
+        "PROJECT=${input:project}",
+        "MODULE=${input:module}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     },
     {
@@ -46,7 +75,7 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
-}
+    }
   ],
   "inputs": [
     {
