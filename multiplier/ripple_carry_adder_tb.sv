@@ -8,7 +8,7 @@ module ripple_carry_adder_tb #(
     logic [DATA_WIDTH:0] ex_sum_and_carry;
 
     // expected sum with carry added on top
-    assign ex_sum_and_carry = {{1'b0, a_tb} + {1'b0, b_tb} + (DATA_WIDTH)'(carry_in_tb)};
+    assign ex_sum_and_carry = {{1'b0, a_tb} + {1'b0, b_tb} + (DATA_WIDTH+1)'(carry_in_tb)};
 
     ripple_carry_adder #(.n(DATA_WIDTH)) RPA(.carry_in(carry_in_tb),.a(a_tb), .b(b_tb), 
         .sum_out(sum_tb), .carry_out(carry_out_tb));
