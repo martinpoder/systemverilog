@@ -26,13 +26,21 @@
 PROJECT ?= .
 MODULE ?=
 
-# All SV files in this project folder
-SV_FILES := $(wildcard $(PROJECT)/*.sv)
-TB_FILES := $(wildcard $(PROJECT)/*_tb.sv)
+# All SystemVerilog files in the project
+SV_FILES := $(sort $(wildcard $(PROJECT)/*.sv))
 
-# Exclude all testbenches except the selected one
-DESIGN_FILES := $(filter-out $(TB_FILES),$(SV_FILES))
+# Identify packages and testbenches
+PKG_FILES := $(filter %_pkg.sv,$(SV_FILES))
+TB_FILES  := $(filter %_tb.sv,$(SV_FILES))
+
+# Exclude packages and testbenches from design files
+DESIGN_FILES := $(filter-out $(PKG_FILES) $(TB_FILES),$(SV_FILES))
+
+# Selected testbench
 TB := $(PROJECT)/$(MODULE)_tb.sv
+
+# Compilation order: packages -> design -> testbench
+COMPILE_FILES := $(PKG_FILES) $(DESIGN_FILES) $(TB)
 
 # Outputs named after the selected module
 SIM := $(PROJECT)/$(MODULE).vvp
@@ -56,7 +64,7 @@ list: check
 	@echo "Module:  $(MODULE)"
 	@echo "Top:     $(MODULE)_tb"
 	@echo "Sources:"
-	@printf '  %s\n' $(DESIGN_FILES) "$(TB)"
+	@printf '  %s\n' $(COMPILE_FILES)
 	@echo "Binary:  $(SIM)"
 	@echo "Waveform: $(VCD)"
 	@echo "Log:      $(LOG)"
@@ -65,9 +73,9 @@ compile: check
 	iverilog -g2012 -Wall \
 		-s "$(MODULE)_tb" \
 		-o "$(SIM)" \
-		$(DESIGN_FILES) "$(TB)"
+		$(COMPILE_FILES)
 
-sim: compile
+sim: check
 	@bash -o pipefail -c '{ \
 		$(MAKE) compile PROJECT="$(PROJECT)" MODULE="$(MODULE)" && \
 		cd "$(PROJECT)" && \

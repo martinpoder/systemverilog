@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 package cpu_pkg;
 
 typedef enum logic [5:0] {

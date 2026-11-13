@@ -7,10 +7,10 @@ module alu #(
 )(
     input logic [WIDTH - 1:0] a,
     input logic [WIDTH - 1:0] b,
-	input flag_t flags_in,
+	input logic [3:0] flags_in,
 	input alu_ops_t op,
     output logic [WIDTH - 1:0] result,
-	output flag_t flags_out
+	output logic [3:0] flags_out
     );
 
 	logic [WIDTH - 1:0] add_r, sub_r, and_r, or_r, xor_r, inv_r, 
@@ -27,11 +27,11 @@ module alu #(
 	assign inv_r = ~a;			// invert a
 	assign shl_r = a << b;		// shift a left by b
 	assign shr_r = a >> b;		// shift a right by b
-	assign ashl_r = a <<< b;			// arithmetic shift a left by b
+	assign ashl_r = a <<< b;							// arithmetic shift a left by b
 	assign ashr_r = $unsigned($signed(a) >>> b);		// arithmetic shift a right by b
 	assign rrc_r = {flags_in[FLAG_C], a[WIDTH - 1:1]};	// rotate right through carry
 	assign rlc_r = {a[WIDTH-2:0], flags_in[FLAG_C]};	// rotate left through carry
-	assign neg_r = -a;
+	assign neg_r = ~a + 1;
 
 	always_comb begin
 		flags_out = flags_in; 	// keep flags by default
@@ -40,14 +40,14 @@ module alu #(
 			ALU_ADD: begin
 				result = add_r;
 				flags_out[FLAG_C]  = add_carry_out;
-				flags_out[FLAG_OV] = (a[WIDTH - 1] == b[WIDTH - 1]) &&
-									 (result[WIDTH - 1] != a[WIDTH - 1]);
+				flags_out[FLAG_OV] = (a[WIDTH - 1] == b[WIDTH - 1]) &&		// both have same sign
+									 (result[WIDTH - 1] != a[WIDTH - 1]);	// result has different sign
 			end
 			ALU_SUB: begin
 				result = sub_r;
 				flags_out[FLAG_C]  = sub_carry_out; // 1 = no borrow
-				flags_out[FLAG_OV] = (a[WIDTH - 1] != b[WIDTH - 1]) &&
-									 (result[WIDTH - 1] != a[WIDTH - 1]);
+				flags_out[FLAG_OV] = (a[WIDTH - 1] != b[WIDTH - 1]) &&		// different signs
+									 (result[WIDTH - 1] != a[WIDTH - 1]);	// result has different sign than a
 				flags_out[FLAG_EQ] = (a == b);
 			end
 			ALU_SHIFT_ARITH_R: begin
@@ -64,11 +64,11 @@ module alu #(
 			end
 			ALU_RRC: begin
 				result = rrc_r;
-				flags_out[FLAG_C] = a[0];
+				flags_out[FLAG_C] = a[0];	// LSB == carry
 			end
 			ALU_RLC: begin
 				result = rlc_r;
-				flags_out[FLAG_C] = a[WIDTH - 1];
+				flags_out[FLAG_C] = a[WIDTH - 1];	// MSB == carry
 			end
 			ALU_AND: begin
 				result = and_r;
@@ -84,14 +84,15 @@ module alu #(
 			end
 			ALU_NEG: begin
 				result = neg_r;
-				flags_out[FLAG_OV] = (a == {1'b1, {(WIDTH - 1){1'b0}}});
+				// FLAG_OV = 1 if trying to negate 10000000
+				flags_out[FLAG_OV] = (a == {1'b1, {(WIDTH-1){1'b0}}});
 			end
 			default: begin
 				result = a;
 			end
 		endcase
 
-		flags_out[FLAG_Z] = (result == '0);
+		flags_out[FLAG_Z] = (result == '0);		// '0 means all bits zero regadless of width
 	end
 
 endmodule
