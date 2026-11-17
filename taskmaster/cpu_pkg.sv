@@ -68,6 +68,45 @@ typedef enum logic [3:0] {  // value defines operation. Since below 16 values it
     ALU_XOR,
     ALU_FLIP,
     ALU_NEG
-} alu_ops_t;
+} alu_op_t;
+
+typedef enum logic [1:0] {
+    FETCH, 
+    DECODE, 
+    EXECUTE, 
+    WRITEBACK
+} state_t;
+
+typedef enum logic [2:0] {
+    SRC_REG, 
+    SRC_MEM, 
+    SRC_DIR,
+    SRC_ONE, 
+    SRC_ZERO, 
+    SRC_PC
+} b_src_t;
+
+typedef enum logic [1:0] {
+    DST_A,
+    DST_R0,
+    DST_R
+} dest_t;
+
+typedef enum logic [1:0] {
+    RD_A,
+    RD_SP
+} rd_sel_t;
+
+typedef struct packed {
+    alu_op_t alu_op;    // ALU operation
+    b_src_t b_src;      // source of operand B
+    dest_t dest;        // where the result is written
+    logic upd_flags;    // write ALU flags to flags register
+    rd_sel_t rd_sel;    // data memory read address
+    logic mem_we;       // data memory write
+    logic sp_inc;       // SP <- SP + 1
+    logic sp_dec;       // SP <- SP - 1
+    logic halt;
+} ctrl_t;
 
 endpackage

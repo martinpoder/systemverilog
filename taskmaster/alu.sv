@@ -8,7 +8,7 @@ module alu #(
     input logic [WIDTH - 1:0] a,
     input logic [WIDTH - 1:0] b,
 	input logic [3:0] flags_in,
-	input alu_ops_t op,
+	input alu_op_t op,
     output logic [WIDTH - 1:0] result,
 	output logic [3:0] flags_out
     );
