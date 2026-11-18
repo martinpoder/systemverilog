@@ -1,91 +1,63 @@
-# Shared SystemVerilog workflow
-#
-# Examples:
-#   make list PROJECT=my_project
-#   make compile PROJECT=my_project MODULE=cpu
-#   make sim PROJECT=my_project MODULE=cpu
-#   make wave PROJECT=my_project MODULE=cpu
-#   make clean PROJECT=my_project MODULE=cpu
-# 
-# Testbenches should use following VCD filename 
-#
-# string vcd_file;
-#
-# initial begin
-#    if (!$value$plusargs("VCD=%s", vcd_file))
-#        vcd_file = "simulation.vcd";
-#
-#    $dumpfile(vcd_file);
-#    $dumpvars(0, cpu_tb);
-#
-# end
-# 
-# Can be used together with .vscode/tasks.json to run them 
-# from keyboard shortcut (Ctrl + Shift + P)
-
+# Shared SystemVerilog workflow (WSL / Ubuntu)
+# Examples: make sim PROJECT=taskmaster MODULE=alu SIMULATOR=verilator
+#           make sim PROJECT=taskmaster MODULE=alu SIMULATOR=iverilog
 PROJECT ?= .
 MODULE ?=
+SIMULATOR ?= verilator
 
-# All SystemVerilog files in the project
 SV_FILES := $(sort $(wildcard $(PROJECT)/*.sv))
-
-# Identify packages and testbenches
 PKG_FILES := $(filter %_pkg.sv,$(SV_FILES))
-TB_FILES  := $(filter %_tb.sv,$(SV_FILES))
-
-# Exclude packages and testbenches from design files
+TB_FILES := $(filter %_tb.sv,$(SV_FILES))
 DESIGN_FILES := $(filter-out $(PKG_FILES) $(TB_FILES),$(SV_FILES))
-
-# Selected testbench
 TB := $(PROJECT)/$(MODULE)_tb.sv
-
-# Compilation order: packages -> design -> testbench
 COMPILE_FILES := $(PKG_FILES) $(DESIGN_FILES) $(TB)
 
-# Outputs named after the selected module
-SIM := $(PROJECT)/$(MODULE).vvp
+TOP := $(MODULE)_tb
+VVP := $(PROJECT)/$(MODULE).vvp
+OBJ_DIR := $(PROJECT)/obj_dir_$(MODULE)
+VERILATOR_EXE := $(OBJ_DIR)/V$(TOP)
 VCD := $(PROJECT)/$(MODULE).vcd
 LOG := $(PROJECT)/$(MODULE).log
 
 .PHONY: all check list compile sim wave clean
-
 all: sim
 
 check:
-	@test -n "$(MODULE)" || \
-		(echo "ERROR: Specify MODULE=name"; exit 1)
-	@test -d "$(PROJECT)" || \
-		(echo "ERROR: Project folder not found: $(PROJECT)"; exit 1)
-	@test -f "$(TB)" || \
-		(echo "ERROR: Testbench not found: $(TB)"; exit 1)
+	@test -n "$(MODULE)" || { echo 'ERROR: Specify MODULE=name'; exit 1; }
+	@test -d "$(PROJECT)" || { echo 'ERROR: Project folder not found: $(PROJECT)'; exit 1; }
+	@test -f "$(TB)" || { echo 'ERROR: Testbench not found: $(TB)'; exit 1; }
+	@case "$(SIMULATOR)" in verilator|iverilog) ;; *) echo 'ERROR: SIMULATOR must be verilator or iverilog'; exit 1;; esac
 
 list: check
-	@echo "Project: $(PROJECT)"
-	@echo "Module:  $(MODULE)"
-	@echo "Top:     $(MODULE)_tb"
-	@echo "Sources:"
+	@echo 'Project: $(PROJECT)'
+	@echo 'Module: $(MODULE)'
+	@echo 'Simulator: $(SIMULATOR)'
+	@echo 'Top: $(TOP)'
+	@echo 'Ordered sources:'
 	@printf '  %s\n' $(COMPILE_FILES)
-	@echo "Binary:  $(SIM)"
-	@echo "Waveform: $(VCD)"
-	@echo "Log:      $(LOG)"
+	@echo 'Waveform: $(VCD)'
+	@echo 'Log: $(LOG)'
 
 compile: check
-	iverilog -g2012 -Wall \
-		-s "$(MODULE)_tb" \
-		-o "$(SIM)" \
+ifeq ($(SIMULATOR),verilator)
+	verilator --binary --timing --trace-vcd --assert -Wall -Wno-fatal \
+		--top-module "$(TOP)" --Mdir "$(abspath $(OBJ_DIR))" \
 		$(COMPILE_FILES)
+else
+	iverilog -g2012 -Wall -s "$(TOP)" -o "$(VVP)" $(COMPILE_FILES)
+endif
 
+# Compile once; log both compilation and simulation, preserving exit status.
 sim: check
 	@bash -o pipefail -c '{ \
-		$(MAKE) compile PROJECT="$(PROJECT)" MODULE="$(MODULE)" && \
-		cd "$(PROJECT)" && \
-		vvp "$(MODULE).vvp" +VCD="$(MODULE).vcd"; \
+		$(MAKE) --no-print-directory compile PROJECT="$(PROJECT)" MODULE="$(MODULE)" SIMULATOR="$(SIMULATOR)" && \
+		$(if $(filter verilator,$(SIMULATOR)),cd "$(PROJECT)" && "./obj_dir_$(MODULE)/V$(TOP)" +VCD="$(MODULE).vcd",cd "$(PROJECT)" && vvp "$(MODULE).vvp" +VCD="$(MODULE).vcd"); \
 	} 2>&1 | tee "$(LOG)"'
 
 wave: check
-	@test -f "$(VCD)" || \
-		(echo "ERROR: $(VCD) not found. Run make sim first."; exit 1)
+	@test -f "$(VCD)" || { echo 'ERROR: $(VCD) not found. Run make sim first.'; exit 1; }
 	gtkwave "$(VCD)"
 
 clean: check
-	rm -f "$(SIM)"
+	rm -f "$(VVP)" "$(VCD)" "$(LOG)"
+	rm -rf "$(OBJ_DIR)"

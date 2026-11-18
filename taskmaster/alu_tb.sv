@@ -159,7 +159,7 @@ module alu_tb #(
 
         $display("NON-ARITHMETIC TESTS STOP");
 
-        $stop;
+        $finish;
     end
 
 endmodule

@@ -80,7 +80,7 @@ initial begin
 	assert (accu_o_tb - data_i_tb == data_o_tb) $display("%h-%h=%h < Correct", accu_o_tb, data_i_tb, data_o_tb);
 	   else $error("%h-%h=%h < Error", accu_o_tb, data_i_tb, data_o_tb);
 
-    $stop;
+    $finish;
 end
 
 endmodule

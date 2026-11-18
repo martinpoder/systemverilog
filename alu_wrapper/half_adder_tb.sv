@@ -58,7 +58,6 @@ module half_adder_tb(
         a_tb = 1; b_tb = 1; #5;
         assert (sum_tb == 2'b10) $display("%b + %b = %b < Correct", a_tb, b_tb, sum_tb);
             else $error("%b + %b = %b < Incorrect, must be 10", a_tb, b_tb, sum_tb);
-        $stop;
 		$finish;
     end
     

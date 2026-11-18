@@ -75,7 +75,7 @@ module subtractor_tb(
         assert (sum_tb == 4'h5 && reminder_tb == 1'b1) $display("%h-%h=%h R=%b < Correct", a_tb, b_tb, sum_tb, reminder_tb);
             else $error("%h-%h=%h R=%b < Incorrect, must be 5 R=1", a_tb, b_tb, sum_tb, reminder_tb);
 
-        $stop;
+        $finish;
     end
 
 endmodule

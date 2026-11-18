@@ -1,4 +1,6 @@
 *.vcd
+*.fst
 *.vvp
 *.log
 *.json
+obj_dir*/

@@ -8,7 +8,8 @@
       "args": [
         "list",
         "PROJECT=${input:project}",
-        "MODULE=${input:module}"
+        "MODULE=${input:module}",
+      //  "SIMULATOR=${input:simulator}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -22,7 +23,8 @@
       "args": [
         "compile",
         "PROJECT=${input:project}",
-        "MODULE=${input:module}"
+        "MODULE=${input:module}",
+      //  "SIMULATOR=${input:simulator}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -37,7 +39,8 @@
       "args": [
         "sim",
         "PROJECT=${input:project}",
-        "MODULE=${input:module}"
+        "MODULE=${input:module}",
+      //  "SIMULATOR=${input:simulator}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -89,6 +92,17 @@
       "type": "promptString",
       "description": "Top module name (without _tb)",
       "default": "adder"
+    },
+/*    {
+      "id": "simulator",
+      "type": "pickString",
+      "description": "SystemVerilog simulator",
+      "options": [
+        "verilator",
+        "iverilog"
+      ],
+      "default": "verilator"
     }
+*/
   ]
 }

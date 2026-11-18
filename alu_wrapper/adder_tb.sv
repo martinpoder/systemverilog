@@ -78,7 +78,7 @@ module adder_tb(
         assert (sum_tb == 4'h0 && carry_out_tb == 1'b1) $display("CI=%b %h+%h=%h CO=%b < Correct", carry_in_tb, a_tb, b_tb, sum_tb, carry_out_tb);
             else $error("CI=%b %h+%h=%h CO=%b < Incorrect, must be 0 CO=1", carry_in_tb, a_tb, b_tb, sum_tb, carry_out_tb);
 
-        $stop;
+        $finish;
     end
 
 endmodule

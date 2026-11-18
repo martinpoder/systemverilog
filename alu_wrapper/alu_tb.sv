@@ -81,7 +81,7 @@ module alu_tb(
         assert (result_tb == 4'h3) $display("%b >> %b=%b < Correct", a_tb, b_tb, result_tb);
             else $error("%b >> %b=%b < Incorrect, must be 0011", a_tb, b_tb, result_tb);
 
-        $stop;
+        $finish;
     end
 
 endmodule

@@ -39,7 +39,7 @@ initial begin
         end
     end
     $display("%d-BIT TEST STOP", DATA_WIDTH);
-    $stop;
+    $finish;
 end
 
 endmodule

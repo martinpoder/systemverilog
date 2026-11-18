@@ -47,14 +47,14 @@ typedef enum logic [5:0] {
     HALT          = 6'b111111  // stop: PC and state do not change –
 } opcode_t;
 
-typedef enum logic [3:0] {  // each bit is one flag, therefore 4 bits
+typedef enum logic [1:0] {
     FLAG_C,     // CARRY: ADD carry out of bit 7; SUB A + ~B + 1 ie no borrow; RRC/RLC: the bit shifted out
     FLAG_Z,     // ZERO: 1 if ALU result is 0
     FLAG_OV,    // OVERFLOW: signed (2’s compl) result does not fit into 8 bits, e.g. 127 + 1
     FLAG_EQ     // EQUAL: SUB the two operands are equal (A = B before subtraction)
 } flag_t;
 
-typedef enum logic [3:0] {  // value defines operation. Since below 16 values it can fit into 4 bits
+typedef enum logic [3:0] {
     ALU_ADD,
     ALU_SUB,
     ALU_SHIFT_ARITH_R,
