@@ -67,7 +67,9 @@ typedef enum logic [3:0] {
     ALU_OR,
     ALU_XOR,
     ALU_FLIP,
-    ALU_NEG
+    ALU_NEG,
+    ALU_PASS_A,
+    ALU_PASS_B
 } alu_op_t;
 
 typedef enum logic [1:0] {
@@ -78,12 +80,12 @@ typedef enum logic [1:0] {
 } state_t;
 
 typedef enum logic [2:0] {
-    SRC_REG, 
-    SRC_MEM, 
-    SRC_DIR,
-    SRC_ONE, 
-    SRC_ZERO, 
-    SRC_PC
+    SRC_REG,    // register file
+    SRC_MEM,    // data memory
+    SRC_DIR,    // constant (operand)
+    SRC_ONE,    // 1 for IncA, DecA
+    SRC_ZERO,   // 0
+    SRC_PC      // program counter
 } b_src_t;
 
 typedef enum logic [1:0] {

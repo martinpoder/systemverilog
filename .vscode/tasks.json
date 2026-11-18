@@ -8,8 +8,21 @@
       "args": [
         "list",
         "PROJECT=${input:project}",
-        "MODULE=${input:module}",
-      //  "SIMULATOR=${input:simulator}"
+        "MODULE=${input:module}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "SV: Generate filelist",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "filelist",
+        "PROJECT=${input:project}",
+        "MODULE=${input:module}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -23,8 +36,7 @@
       "args": [
         "compile",
         "PROJECT=${input:project}",
-        "MODULE=${input:module}",
-      //  "SIMULATOR=${input:simulator}"
+        "MODULE=${input:module}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -39,8 +51,7 @@
       "args": [
         "sim",
         "PROJECT=${input:project}",
-        "MODULE=${input:module}",
-      //  "SIMULATOR=${input:simulator}"
+        "MODULE=${input:module}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -92,17 +103,6 @@
       "type": "promptString",
       "description": "Top module name (without _tb)",
       "default": "adder"
-    },
-/*    {
-      "id": "simulator",
-      "type": "pickString",
-      "description": "SystemVerilog simulator",
-      "options": [
-        "verilator",
-        "iverilog"
-      ],
-      "default": "verilator"
     }
-*/
   ]
 }
