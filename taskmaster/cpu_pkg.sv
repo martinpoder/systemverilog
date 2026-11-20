@@ -89,12 +89,14 @@ typedef enum logic [2:0] {
 } b_src_t;
 
 typedef enum logic [1:0] {
+    DST_NONE,
     DST_A,
     DST_R0,
     DST_R
 } dest_t;
 
 typedef enum logic [1:0] {
+    RD_OPERAND,
     RD_A,
     RD_SP
 } rd_sel_t;
@@ -104,8 +106,10 @@ typedef struct packed {
     b_src_t b_src;      // source of operand B
     dest_t dest;        // where the result is written
     logic upd_flags;    // write ALU flags to flags register
+    logic [3:0] clear_flags; // mask for explicit flag clears
     rd_sel_t rd_sel;    // data memory read address
     logic mem_we;       // data memory write
+    logic wr_at_sp;     // use SP as the data memory write address
     logic sp_inc;       // SP <- SP + 1
     logic sp_dec;       // SP <- SP - 1
     logic halt;

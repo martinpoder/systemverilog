@@ -87,6 +87,8 @@ module alu #(
 				// FLAG_OV = 1 if trying to negate 10000000
 				flags_out[FLAG_OV] = (a == {1'b1, {(WIDTH-1){1'b0}}});
 			end
+			ALU_PASS_A: result = a;
+			ALU_PASS_B: result = b;
 			default: begin
 				result = a;
 			end

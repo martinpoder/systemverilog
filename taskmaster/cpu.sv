@@ -6,7 +6,10 @@ module cpu
     (input logic clk, rst,
      output logic [7:0] instr_addr, // address to instruction memory
      input logic [13:0] instr_data, // data from instruction memory
-     output logic halted);
+     output logic halted,
+     output logic [7:0] dmem_rd_addr, dmem_wr_addr, dmem_wdata,
+     input logic [7:0] dmem_rdata,
+     output logic dmem_rw);
 
     logic [7:0] pc;         // program counter (address of the instruction memory)
     assign instr_addr = pc;
@@ -20,6 +23,7 @@ module cpu
     logic [7:0] alu_result; //
     logic [3:0] res_flags;  //
     logic [3:0] alu_flags;  //
+    logic [3:0] alu_flags_in;
     logic [7:0] pc_target;  //
     logic [7:0] pc_next;    //
     ctrl_t ctrl;
@@ -51,11 +55,17 @@ module cpu
         c.dest = dst;
     endtask
 
+    // The CPU's ADD instructions and INC have no carry input.
+    always_comb begin
+        alu_flags_in = flags;
+        if (ctrl.alu_op == ALU_ADD) alu_flags_in[FLAG_C] = 1'b0;
+    end
+
     alu #(.WIDTH(8)) u_alu (
         .a (a),
         .b (op_b),
         .op (ctrl.alu_op),
-        .flags_in (flags),
+        .flags_in (alu_flags_in),
         .result (alu_result),
         .flags_out (alu_flags));
 
@@ -80,6 +90,10 @@ module cpu
         if (rst) begin
             pc <= '0;
             ir <= '0;
+            a <= '0;
+            r <= '{default: '0};
+            flags <= '0;
+            sp <= '0;
         end else begin
             case (state)
                 FETCH: ir <= instr_data;        // IR <- IM[PC]
@@ -96,6 +110,7 @@ module cpu
                         default: ;
                     endcase
                     if (ctrl.upd_flags) flags <= res_flags;
+                    else if (ctrl.clear_flags != '0) flags <= flags & ~ctrl.clear_flags;
                     if (ctrl.sp_inc) sp <= sp + 1'b1;
                     if (ctrl.sp_dec) sp <= sp - 1'b1;
                     pc <= pc_target;
@@ -108,6 +123,7 @@ module cpu
 
     // data memory is written at the end of the Write-Back state
     assign dmem_rw = (state == WRITEBACK) && ctrl.mem_we;
+    assign halted = (state == WRITEBACK) && ctrl.halt;
 
     // execution
     // take the jump when cond is 1
@@ -118,7 +134,8 @@ module cpu
     endtask
 
     always_comb begin : decoder
-        ctrl = '0; // default: do nothing
+        ctrl = '{alu_op: ALU_PASS_A, b_src: SRC_ZERO, dest: DST_NONE,
+                 rd_sel: RD_OPERAND, default: '0};
         case (opcode)
             ADD_A_R: alu_to_a(ALU_ADD, SRC_REG, ctrl);
             ADD_A_MEM: alu_to_a(ALU_ADD, SRC_MEM, ctrl);
@@ -128,10 +145,10 @@ module cpu
             SUB_A_DIR: alu_to_a(ALU_SUB, SRC_DIR, ctrl);
             INC_A: alu_to_a(ALU_ADD, SRC_ONE, ctrl);
             DEC_A: alu_to_a(ALU_SUB, SRC_ONE, ctrl);
-            SHIFT_ARITH_R: alu_to_a(ALU_SHIFT_ARITH_R, SRC_DIR, ctrl);
-            SHIFT_ARITH_L: alu_to_a(ALU_SHIFT_ARITH_L, SRC_DIR, ctrl);
-            SHIFTA_R: alu_to_a(ALU_SHIFT_A_R, SRC_DIR, ctrl);
-            SHIFTA_L: alu_to_a(ALU_SHIFT_A_L, SRC_DIR, ctrl);
+            SHIFT_ARITH_R: alu_to_a(ALU_SHIFT_ARITH_R, SRC_ONE, ctrl);
+            SHIFT_ARITH_L: alu_to_a(ALU_SHIFT_ARITH_L, SRC_ONE, ctrl);
+            SHIFTA_R: alu_to_a(ALU_SHIFT_A_R, SRC_ONE, ctrl);
+            SHIFTA_L: alu_to_a(ALU_SHIFT_A_L, SRC_ONE, ctrl);
             RRC: alu_to_a(ALU_RRC, SRC_ZERO, ctrl);
             RLC: alu_to_a(ALU_RLC, SRC_ZERO, ctrl);
             AND_A_R: alu_to_a(ALU_AND, SRC_REG, ctrl);
@@ -140,10 +157,26 @@ module cpu
             FLIP_A: alu_to_a(ALU_FLIP, SRC_ZERO, ctrl);
             NEG_A: alu_to_a(ALU_NEG, SRC_ZERO, ctrl);
             // Jumps handled in next_pc_logic
+            CLEAR_Z: ctrl.clear_flags[FLAG_Z] = 1'b1;
+            CLEAR_OV: ctrl.clear_flags[FLAG_OV] = 1'b1;
+            CLEAR_C: ctrl.clear_flags[FLAG_C] = 1'b1;
+            CLEAR_ACC: move(SRC_ZERO, DST_A, ctrl);
+            SAVE_PC: move(SRC_PC, DST_A, ctrl);
             LOAD_A_MEM: move(SRC_MEM, DST_A, ctrl);
-            LOAD_R0_DIR: move(SRC_DIR, DST_R0, ctrl);
-            //
             STORE_A_MEM: ctrl.mem_we = 1'b1;
+            LOAD_R0_DIR: move(SRC_DIR, DST_R0, ctrl);
+            LOAD_R0_MEM: move(SRC_MEM, DST_R0, ctrl);
+            LOAD_A_R: move(SRC_REG, DST_A, ctrl);
+            LOAD_R_A: move(SRC_ZERO, DST_R, ctrl);
+            LOAD_IND_A: begin
+                ctrl.rd_sel = RD_A;
+                move(SRC_MEM, DST_A, ctrl);
+            end
+            PUSH: begin
+                ctrl.mem_we = 1'b1;
+                ctrl.wr_at_sp = 1'b1;
+                ctrl.sp_inc = 1'b1;
+            end
             POP: begin
                 ctrl.rd_sel = RD_SP;
                 ctrl.sp_dec = 1'b1;
@@ -159,9 +192,10 @@ module cpu
         case (opcode)
             JMP: jump_if(1'b1, operand, pc_next);
             JMPZ: jump_if(flags[FLAG_Z], operand, pc_next);
-            //
+            JMPOV: jump_if(flags[FLAG_OV], operand, pc_next);
             JMPC: jump_if(flags[FLAG_C], operand, pc_next);
             JMP_REL: jump_if(1'b1, pc + operand, pc_next);
+            JMP_EQ: jump_if(flags[FLAG_EQ], operand, pc_next);
             LOAD_PC: jump_if(1'b1, a, pc_next);
             HALT: pc_next = pc; // stay here
             default: ;
